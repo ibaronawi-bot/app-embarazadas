@@ -3,26 +3,15 @@ import { initializeApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { getFirestore, collection, addDoc, onSnapshot } from "firebase/firestore";
 
-// 🔥 CONFIGURA AQUÍ TU FIREBASE (te explico abajo)
+// 🔥 TU CONFIG FIREBASE (ya la tienes bien)
 const firebaseConfig = {
-
   apiKey: "AIzaSyA63bwkcyaQ3NLFINvinscfRurJH61_TFA",
-
   authDomain: "jornadas-embrazadas.firebaseapp.com",
-
   projectId: "jornadas-embrazadas",
-
-  storageBucket: "jornadas-embrazadas.firebasestorage.app",
-
+  storageBucket: "jornadas-embrazadas.appspot.com",
   messagingSenderId: "787676135101",
-
-  appId: "1:787676135101:web:5b37ac03da9000eaf481d4",
-
-  measurementId: "G-P2J6CCYF0J"
-
+  appId: "1:787676135101:web:5b37ac03da9000eaf481d4"
 };
-
-
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -31,7 +20,6 @@ const db = getFirestore(app);
 export default function App() {
   const [user, setUser] = useState(null);
   const [loginData, setLoginData] = useState({ email: "", password: "" });
-
   const [pacientes, setPacientes] = useState([]);
   const [busqueda, setBusqueda] = useState("");
 
@@ -45,13 +33,11 @@ export default function App() {
     recienNacido: { nombre: "", peso: "" }
   });
 
-  // 🔄 ESCUCHAR DATOS EN TIEMPO REAL
   useEffect(() => {
     if (!user) return;
 
     const unsub = onSnapshot(collection(db, "pacientes"), (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setPacientes(data);
+      setPacientes(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
 
     return () => unsub();
@@ -61,7 +47,7 @@ export default function App() {
     try {
       const res = await signInWithEmailAndPassword(auth, loginData.email, loginData.password);
       setUser(res.user);
-    } catch (err) {
+    } catch {
       alert("Error login");
     }
   };
@@ -73,7 +59,7 @@ export default function App() {
 
   const guardar = async () => {
     await addDoc(collection(db, "pacientes"), form);
-    alert("Guardado en la nube ✅");
+    alert("Guardado ✅");
   };
 
   const filtrados = pacientes.filter(p =>
@@ -83,7 +69,7 @@ export default function App() {
   if (!user) {
     return (
       <div style={{ textAlign: "center", padding: 50 }}>
-        <h1>🔐 Login Sistema</h1>
+        <h1>🔐 Login</h1>
         <input placeholder="Correo" onChange={(e)=>setLoginData({...loginData,email:e.target.value})}/><br/>
         <input type="password" placeholder="Contraseña" onChange={(e)=>setLoginData({...loginData,password:e.target.value})}/><br/>
         <button onClick={login}>Entrar</button>
@@ -93,20 +79,16 @@ export default function App() {
 
   return (
     <div style={{ padding: 20 }}>
-      <h1>🩺 Plataforma Embarazadas (Firebase)</h1>
+      <h1>🩺 Sistema Embarazadas</h1>
       <button onClick={logout}>Cerrar sesión</button>
 
-      <h2>📋 Registro</h2>
+      <h2>Registro</h2>
       <input placeholder="Nombre" onChange={(e)=>setForm({...form,nombre:e.target.value})}/>
       <input placeholder="Edad" onChange={(e)=>setForm({...form,edad:e.target.value})}/>
       <input placeholder="Localidad" onChange={(e)=>setForm({...form,localidad:e.target.value})}/>
 
-      <label>
-        <input type="checkbox" onChange={(e)=>setForm({...form,jornada1:e.target.checked})}/> Jornada 1
-      </label>
-      <label>
-        <input type="checkbox" onChange={(e)=>setForm({...form,jornada2:e.target.checked})}/> Jornada 2
-      </label>
+      <label><input type="checkbox" onChange={(e)=>setForm({...form,jornada1:e.target.checked})}/> J1</label>
+      <label><input type="checkbox" onChange={(e)=>setForm({...form,jornada2:e.target.checked})}/> J2</label>
 
       <select onChange={(e)=>setForm({...form,estado:e.target.value})}>
         <option>EMBARAZADA</option>
@@ -115,26 +97,19 @@ export default function App() {
 
       {form.estado === "PUERPERA" && (
         <div>
-          <h3>👶 Recién Nacido</h3>
-          <input placeholder="Nombre RN" onChange={(e)=>setForm({...form,recienNacido:{...form.recienNacido,nombre:e.target.value}})}/>
+          <input placeholder="RN Nombre" onChange={(e)=>setForm({...form,recienNacido:{...form.recienNacido,nombre:e.target.value}})}/>
           <input placeholder="Peso" onChange={(e)=>setForm({...form,recienNacido:{...form.recienNacido,peso:e.target.value}})}/>
         </div>
       )}
 
-      <button onClick={guardar}>Guardar en la nube</button>
+      <button onClick={guardar}>Guardar</button>
 
-      <h2>🔎 Pacientes</h2>
+      <h2>Pacientes</h2>
       <input placeholder="Buscar" onChange={(e)=>setBusqueda(e.target.value)}/>
-
       {filtrados.map(p => (
-        <div key={p.id} style={{ border:"1px solid #ccc", margin:10, padding:10}}>
+        <div key={p.id}>
           <h3>{p.nombre}</h3>
           <p>{p.edad} años</p>
-          <p>{p.localidad}</p>
-          <p>J1: {p.jornada1 ? "✔" : "✘"} | J2: {p.jornada2 ? "✔" : "✘"}</p>
-          {p.estado === "PUERPERA" && (
-            <p>RN: {p.recienNacido?.nombre} - {p.recienNacido?.peso}kg</p>
-          )}
         </div>
       ))}
     </div>
